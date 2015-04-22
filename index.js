@@ -25,7 +25,11 @@ var defaultOptions = {
 };
 
 module.exports = function(slugFields, options) {
-  options = extend(true, defaultOptions, options);
+  options = extend(true, {}, defaultOptions, options);
+
+  if (options.field === '_id' && options.update) {
+    throw new Error('Can not update "_id" path')
+  }
 
   if (slugFields.indexOf(' ') > -1) {
     slugFields = slugFields.split(' ');
@@ -46,7 +50,7 @@ module.exports = function(slugFields, options) {
           q = {};
       
       q[options.field] = new RegExp('^' + (slugLimited? slug.substr(0, slug.length - 2) : slug));
-      q._id = {$ne: doc._id};
+      if (options.field !== '_id') q._id = {$ne: doc._id};
       var fields = {};
       fields[options.field] = 1;
       model.find(q, fields).exec(function (e, docs) {

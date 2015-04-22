@@ -10,10 +10,13 @@ mongoose.connection.on('error', function(err) {
 });
 
 var maxLength = 30,
+    IdObjSchema = new mongoose.Schema({_id: String, name: String}),
     TestObjSchema = new mongoose.Schema({name: String});
 
 TestObjSchema.plugin(urlSlugs('name', {maxLength: maxLength}));
+IdObjSchema.plugin(urlSlugs('name', {field: '_id', addField: false}));
 
+var IdObj = mongoose.model('id_obj', IdObjSchema);
 var TestObj = mongoose.model('test_obj', TestObjSchema);
 
 describe('mongoose-url-slugs', function() {
@@ -33,6 +36,19 @@ describe('mongoose-url-slugs', function() {
       TestObj.create({name: 'super duper long content that cannot possibly fit into a url'}, function(err, obj) {
         expect(obj.slug).length.to.be(maxLength);
         done();
+      });
+    });
+  });
+
+  it('works for path _id', function(done) {
+    IdObj.create({name: 'cool stuff'}, function(err, obj) {
+      expect(obj.id).to.equal('cool-stuff');
+      IdObj.create({name: 'cool stuff'}, function(err, obj) {
+        expect(obj.id).to.equal('cool-stuff-2');
+        IdObj.create({name: 'not cool stuff'}, function(err, obj) {
+          expect(obj.id).to.equal('not-cool-stuff');
+          done();
+        });
       });
     });
   });
